@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Idiomatch',
   description: 'Learn idioms with style.',
   icons: {
-    icon: '/favicon.png', 
+    icon: '/favicon.ico', 
   },
 };
 
