@@ -14,7 +14,6 @@ export async function GET() {
        FROM idioms
        ORDER BY idioms ASC`
     );
-
     if (result.rows.length === 0) {
       return NextResponse.json({
         status: 'success',
@@ -22,15 +21,14 @@ export async function GET() {
         data: [],
       });
     }
-
     return NextResponse.json({
       status: 'success',
       data: result.rows,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('get_idioms error:', err);
     return NextResponse.json(
-      { status: 'error', message: 'Failed to fetch idioms: ' + err.message },
+      { status: 'error', message: 'Failed to fetch idioms' },
       { status: 500 }
     );
   }
