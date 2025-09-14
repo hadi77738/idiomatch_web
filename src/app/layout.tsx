@@ -6,6 +6,9 @@ import Footer from '@/components/Footer';
 export const metadata: Metadata = {
   title: 'Idiomatch',
   description: 'Learn idioms with style.',
+  icons: {
+    icon: '/favicon.png', 
+  },
 };
 
 export default function RootLayout({
