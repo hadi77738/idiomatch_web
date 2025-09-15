@@ -1,4 +1,4 @@
-// src/app/api/users/[id]/route.ts
+// app/api/users/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db';
@@ -9,11 +9,6 @@ interface UpdateUserRequest {
   username?: string;
   nim?: string;
   university_id?: number;
-}
-
-interface SessionValidation {
-  user_id: number;
-  is_admin: boolean;
 }
 
 // PUT /api/users/[id] - Update user
@@ -33,7 +28,7 @@ export async function PUT(
     }
 
     // Validate session and check admin privileges
-    const { rows: sessionRows } = await query<SessionValidation>(
+    const { rows: sessionRows } = await query(
       `SELECT s.user_id, u.is_admin 
        FROM sessions s 
        JOIN users u ON s.user_id = u.id 
@@ -91,7 +86,7 @@ export async function PUT(
 
     // Build dynamic update query
     const updateFields: string[] = [];
-    const updateValues: unknown[] = [];
+    const updateValues: any[] = [];
     let paramCount = 1;
 
     if (body.is_admin !== undefined) {
@@ -108,7 +103,7 @@ export async function PUT(
 
     if (body.username !== undefined) {
       // Check if username already exists
-      const { rows: existingUser } = await query<{ id: number }>(
+      const { rows: existingUser } = await query(
         'SELECT id FROM users WHERE username = $1 AND id != $2',
         [body.username, userId]
       );
@@ -126,7 +121,7 @@ export async function PUT(
 
     if (body.nim !== undefined) {
       // Check if NIM already exists
-      const { rows: existingUser } = await query<{ id: number }>(
+      const { rows: existingUser } = await query(
         'SELECT id FROM users WHERE nim = $1 AND id != $2',
         [body.nim, userId]
       );
@@ -167,14 +162,7 @@ export async function PUT(
       RETURNING id, username, full_name, nim, is_admin, university_id
     `;
 
-    const { rows: updatedUsers } = await query<{
-      id: number;
-      username: string;
-      full_name: string;
-      nim: string;
-      is_admin: boolean;
-      university_id: number;
-    }>(updateQuery, updateValues);
+    const { rows: updatedUsers } = await query(updateQuery, updateValues);
 
     if (updatedUsers.length === 0) {
       return NextResponse.json(
@@ -191,6 +179,94 @@ export async function PUT(
 
   } catch (error) {
     console.error('Error updating user:', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/users/[id] - Get single user
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Validate session and check admin privileges
+    const { rows: sessionRows } = await query(
+      `SELECT s.user_id, u.is_admin 
+       FROM sessions s 
+       JOIN users u ON s.user_id = u.id 
+       WHERE s.token = $1 AND s.expires_at > NOW()`,
+      [token]
+    );
+
+    if (sessionRows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid or expired session' },
+        { status: 401 }
+      );
+    }
+
+    const { is_admin } = sessionRows[0];
+
+    if (!is_admin) {
+      return NextResponse.json(
+        { success: false, message: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const userId = parseInt(params.id);
+    if (isNaN(userId)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid user ID' },
+        { status: 400 }
+      );
+    }
+
+    // Get user with university information
+    const { rows: users } = await query(
+      `SELECT 
+        u.id,
+        u.username,
+        u.full_name,
+        u.nim,
+        u.is_admin,
+        u.university_id,
+        uni.name as university_name,
+        u.created_at,
+        u.updated_at
+      FROM users u
+      LEFT JOIN universities uni ON u.university_id = uni.id
+      WHERE u.id = $1`,
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: users[0]
+    });
+
+  } catch (error) {
+    console.error('Error fetching user:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
