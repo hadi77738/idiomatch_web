@@ -4,23 +4,26 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
-    const { full_name, nim, password, university_id } = await req.json();
+    const { full_name, nim, password, university_id, username } = await req.json();
 
-    if (!full_name || !nim || !password || !university_id) {
+    if (!full_name || !nim || !password || !university_id || !username) {
       return NextResponse.json({ error: 'Semua field wajib diisi' }, { status: 400 });
     }
 
     // Cek NIM sudah terdaftar
-    const existing = await pool.query('SELECT id FROM users WHERE nim = $1', [nim]);
-    if (existing.rows.length > 0) {
+    const existingNim = await pool.query('SELECT id FROM users WHERE nim = $1', [nim]);
+    if (existingNim.rows.length > 0) {
       return NextResponse.json({ error: 'NIM sudah terdaftar' }, { status: 409 });
+    }
+
+    // Cek username sudah terdaftar
+    const existingUsername = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+    if (existingUsername.rows.length > 0) {
+      return NextResponse.json({ error: 'Username sudah terdaftar' }, { status: 409 });
     }
 
     // Hash password
     const hashed = await bcrypt.hash(password, 12);
-
-    // Buat username dari full_name dengan menghilangkan spasi
-    const username = full_name.replace(/\s+/g, '').toLowerCase();
 
     // Insert user baru
     const result = await pool.query(

@@ -14,6 +14,7 @@ export default function RegisterPage() {
     nim: '',
     password: '',
     university_id: '',
+    username: '', // Tambahkan field username
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -95,6 +96,18 @@ export default function RegisterPage() {
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
                 placeholder="At least 6 characters"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
+                placeholder="e.g. budi123"
               />
             </div>
 
