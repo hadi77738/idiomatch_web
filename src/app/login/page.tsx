@@ -30,7 +30,7 @@ export default function LoginPage() {
 
       // Logika pengalihan berdasarkan peran (is_admin)
       if (data.user?.isAdmin) {
-        router.push('/admin/dashboard'); // Arahkan admin ke dashboard
+        router.push('/admin'); // Arahkan admin ke dashboard
       } else {
         router.push('/'); // Arahkan pengguna biasa ke halaman utama
       }
