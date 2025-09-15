@@ -1,42 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { verifyAdmin } from '@/lib/auth'; // Hanya untuk GET
 
+// GET: Admin mengambil semua riwayat kuis
+export async function GET(request: NextRequest) {
+  const adminCheck = await verifyAdmin(request);
+  if (adminCheck) return adminCheck;
+
+  try {
+    const res = await pool.query(`
+      SELECT qa.id, u.full_name, u.nim, qa.score, qa.total_questions, qa.created_at
+      FROM quiz_attempts qa
+      JOIN users u ON qa.user_id = u.id
+      ORDER BY qa.created_at DESC
+    `);
+    return NextResponse.json(res.rows);
+  } catch (err) {
+    console.error('Failed to fetch quiz attempts', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+// POST: Pengguna yang login menyimpan hasil kuis mereka
 export async function POST(request: NextRequest) {
   const token = request.cookies.get('session_token')?.value;
-
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
   try {
-    // Verifikasi sesi dan dapatkan user_id
-    const sessionResult = await pool.query(
+    // Verifikasi token dan dapatkan user_id dari sesi
+    const sessionRes = await pool.query(
       'SELECT user_id FROM sessions WHERE token = $1 AND expires_at > NOW()',
       [token]
     );
 
-    if (sessionResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    if (sessionRes.rows.length === 0) {
+      return NextResponse.json({ error: 'Session invalid or expired' }, { status: 401 });
     }
-    const { user_id } = sessionResult.rows[0];
-
+    const { user_id } = sessionRes.rows[0];
+    
     // Ambil data skor dari body request
     const { score, total_questions } = await request.json();
-
-    if (score === undefined || total_questions === undefined) {
-        return NextResponse.json({ error: 'Score and total_questions are required' }, { status: 400 });
+    if (typeof score !== 'number' || typeof total_questions !== 'number') {
+        return NextResponse.json({ error: 'Invalid score or total_questions' }, { status: 400 });
     }
 
-    // Simpan hasil ke tabel quiz_attempts
+    // Simpan ke database
     await pool.query(
       'INSERT INTO quiz_attempts (user_id, score, total_questions) VALUES ($1, $2, $3)',
       [user_id, score, total_questions]
     );
 
-    return NextResponse.json({ success: true, message: 'Quiz attempt saved' });
-
-  } catch (error) {
-    console.error('Save quiz attempt error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ success: true }, { status: 201 });
+  } catch (err) {
+    console.error('Failed to save quiz attempt', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
+
