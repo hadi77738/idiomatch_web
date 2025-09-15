@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+// Kita tidak lagi memerlukan js-cookie untuk pengecekan ini
 
 type Question = {
   id: number;
@@ -15,7 +15,6 @@ type Question = {
 
 export default function QuizPage() {
   const router = useRouter();
-  // State untuk otentikasi dan loading
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -26,30 +25,40 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
-  const [totalPossible, setTotalPossible] = useState(0);
 
   useEffect(() => {
-    // 1. Cek token login dari cookie
-    const sessionToken = Cookies.get('session_token');
+    // Fungsi untuk cek status login dan mengambil soal kuis
+    async function checkAuthAndFetchQuiz() {
+      try {
+        // 1. Panggil API untuk cek otentikasi
+        const authRes = await fetch('/api/auth/me');
 
-    if (!sessionToken) {
-      // 2. Jika tidak ada token, alihkan ke halaman login
-      router.push('/login');
-    } else {
-      // 3. Jika ada token, izinkan akses dan ambil data kuis
-      setIsAuthorized(true);
-      fetch('/api/quiz')
-        .then((res) => res.json())
-        .then((data) => {
-          setQuestions(data);
-          setTotalPossible(data.length);
-        })
-        .catch((err) => console.error('Gagal memuat quiz:', err))
-        .finally(() => {
-          // 4. Setelah selesai (berhasil atau gagal), hentikan loading
-          setIsLoading(false);
-        });
+        if (!authRes.ok) {
+          // Jika tidak terotentikasi, lempar error untuk dialihkan
+          throw new Error('Not authenticated');
+        }
+
+        // 2. Jika berhasil, izinkan akses dan ambil soal kuis
+        setIsAuthorized(true);
+
+        const quizRes = await fetch('/api/quiz');
+        if (!quizRes.ok) {
+          throw new Error('Gagal memuat soal kuis');
+        }
+        const data = await quizRes.json();
+        setQuestions(data);
+
+      } catch (error) {
+        console.error(error);
+        // 3. Jika terjadi error (misal: tidak login), alihkan ke halaman login
+        router.push('/login');
+      } finally {
+        // 4. Hentikan loading setelah semua proses selesai
+        setIsLoading(false);
+      }
     }
+
+    checkAuthAndFetchQuiz();
   }, [router]);
 
   const handleNext = () => {
@@ -62,13 +71,13 @@ export default function QuizPage() {
     } else {
       // Hitung skor
       const correct = newAnswers.filter((a, i) => a === questions[i].answer).length;
-      const maxScore = 100; // Skor maksimal selalu 100
+      const maxScore = 100;
       setScore(Math.round((correct / questions.length) * maxScore));
       setShowResult(true);
     }
   };
 
-  // Tampilkan UI Loading selama proses verifikasi dan pengambilan data
+  // Tampilkan UI Loading selama proses verifikasi
   if (isLoading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
@@ -76,10 +85,10 @@ export default function QuizPage() {
       </main>
     );
   }
-  
+
   // Jangan render apapun jika tidak terotorisasi (pengalihan sedang berlangsung)
   if (!isAuthorized) {
-    return null; 
+    return null;
   }
 
   // Tampilkan hasil jika kuis selesai
@@ -120,51 +129,56 @@ export default function QuizPage() {
     );
   }
 
-  // Tampilkan soal kuis jika belum selesai
-  return (
-    <>
-      <div
-        className="fixed inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpeg')" }}
-      />
-      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
-      <main className="min-h-screen flex items-center justify-center text-gray-900 px-4">
-        <div className="max-w-2xl w-full">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-gray-700">
-                  Soal {index + 1}/{questions.length}
-                </span>
+  // Tampilkan soal kuis jika belum selesai dan soal sudah termuat
+  if (questions.length > 0) {
+    return (
+      <>
+        <div
+          className="fixed inset-0 -z-10 bg-cover bg-center"
+          style={{ backgroundImage: "url('/bg.jpeg')" }}
+        />
+        <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
+        <main className="min-h-screen flex items-center justify-center text-gray-900 px-4">
+          <div className="max-w-2xl w-full">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-gray-700">
+                    Soal {index + 1}/{questions.length}
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold mb-6">{questions[index].idioms}</h2>
+                <div className="space-y-3">
+                  {questions[index].options.map((opt) => (
+                    <label
+                      key={opt}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-green-50 transition ${selected === opt ? 'bg-green-100 border-green-500' : 'bg-white/70'}`}
+                    >
+                      <input
+                        type="radio"
+                        name="answer"
+                        value={opt}
+                        checked={selected === opt}
+                        onChange={(e) => setSelected(e.target.value)}
+                        className="form-radio h-5 w-5 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-gray-800">{opt}</span>
+                    </label>
+                  ))}
+                </div>
+                <button
+                  onClick={handleNext}
+                  disabled={!selected}
+                  className="mt-6 w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold disabled:opacity-50 hover:from-green-800 hover:to-blue-700 transition"
+                >
+                  {index === questions.length - 1 ? 'Selesai' : 'Selanjutnya'}
+                </button>
               </div>
-              <h2 className="text-xl font-bold mb-6">{questions[index].idioms}</h2>
-              <div className="space-y-3">
-                {questions[index].options.map((opt) => (
-                  <label
-                    key={opt}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-green-50 transition ${selected === opt ? 'bg-green-100 border-green-500' : 'bg-white/70'}`}
-                  >
-                    <input
-                      type="radio"
-                      name="answer"
-                      value={opt}
-                      checked={selected === opt}
-                      onChange={(e) => setSelected(e.target.value)}
-                      className="form-radio h-5 w-5 text-green-600 focus:ring-green-500"
-                    />
-                    <span className="text-gray-800">{opt}</span>
-                  </label>
-                ))}
-              </div>
-              <button
-                onClick={handleNext}
-                disabled={!selected}
-                className="mt-6 w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold disabled:opacity-50 hover:from-green-800 hover:to-blue-700 transition"
-              >
-                {index === questions.length - 1 ? 'Selesai' : 'Selanjutnya'}
-              </button>
-            </div>
-        </div>
-      </main>
-    </>
-  );
+          </div>
+        </main>
+      </>
+    );
+  }
+  
+  return null; // Tampilkan null jika soal belum termuat setelah loading
 }
+
