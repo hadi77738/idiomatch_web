@@ -48,19 +48,21 @@ export default function RegisterPage() {
 
   return (
     <>
-      {/* Background image */}
+      {/* Same background as login */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
+      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
 
       <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow p-8">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-green-800 to-blue-600 bg-clip-text text-transparent mb-6 text-center">
+          <h1 className="text-2xl font-bold text-center mb-6 text-gray-900">
             Create Student Account
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
@@ -68,11 +70,12 @@ export default function RegisterPage() {
                 value={form.full_name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
                 placeholder="e.g. Budi Santoso"
               />
             </div>
 
+            {/* Student ID (NIM) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Student ID (NIM)</label>
               <input
@@ -80,11 +83,12 @@ export default function RegisterPage() {
                 value={form.nim}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
                 placeholder="e.g. 123456789"
               />
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
@@ -93,11 +97,12 @@ export default function RegisterPage() {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
                 placeholder="At least 6 characters"
               />
             </div>
 
+            {/* University */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
               <select
@@ -105,7 +110,7 @@ export default function RegisterPage() {
                 value={form.university_id}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
               >
                 <option value="" disabled>Select university</option>
                 {universities.map((u) => (
@@ -116,12 +121,14 @@ export default function RegisterPage() {
               </select>
             </div>
 
+            {/* Error */}
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold disabled:opacity-60 hover:from-green-800 hover:to-blue-700 transition"
+              className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition disabled:opacity-50"
             >
               {loading ? 'Registering...' : 'Register'}
             </button>
