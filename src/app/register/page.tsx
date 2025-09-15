@@ -3,143 +3,107 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type University = { id: number; name: string };
-
 export default function RegisterPage() {
-  const router = useRouter();
-
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [form, setForm] = useState({
-    full_name: '',
-    nim: '',
-    password: '',
-    university_id: '',
-  });
-  const [loading, setLoading] = useState(false);
+  const [full_name, setFullName] = useState('');
+  const [nim, setNim] = useState('');
+  const [password, setPassword] = useState('');
+  const [university_id, setUniversityId] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
+  const [universities, setUniversities] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
     fetch('/api/universities')
-      .then((r) => r.json())
-      .then(setUniversities)
-      .catch(() => setError('Failed to load universities'));
+      .then((res) => res.json())
+      .then((data) => setUniversities(data))
+      .catch((err) => console.error('Failed to fetch universities:', err));
   }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
-    const res = await fetch('/api/auth/register', {
+    const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ full_name, nim, password, university_id: parseInt(university_id, 10) }),
     });
 
     const data = await res.json();
-    setLoading(false);
-
-    if (!res.ok) return setError(data.error || 'Something went wrong');
-    router.push('/login');
+    if (res.ok) {
+      router.push('/login');
+    } else {
+      setError(data.error || 'Registration failed');
+    }
   };
 
   return (
     <>
-      {/* Same background as login */}
+      {/* Background */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpeg')" }}
+        style={{ backgroundImage: "url('/bg.jpg')" }}
       />
       <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
 
       <main className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow p-8">
-          <h1 className="text-2xl font-bold text-center mb-6 text-gray-900">
-            Create Student Account
-          </h1>
-
+        <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
+          <h1 className="text-2xl font-bold text-center mb-6">Register</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
-                name="full_name"
-                value={form.full_name}
-                onChange={handleChange}
+                type="text"
+                value={full_name}
+                onChange={(e) => setFullName(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                placeholder="e.g. Budi Santoso"
               />
             </div>
-
-            {/* Student ID (NIM) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Student ID (NIM)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">NIM</label>
               <input
-                name="nim"
-                value={form.nim}
-                onChange={handleChange}
+                type="text"
+                value={nim}
+                onChange={(e) => setNim(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                placeholder="e.g. 123456789"
               />
             </div>
-
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
-                name="password"
                 type="password"
-                value={form.password}
-                onChange={handleChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                placeholder="At least 6 characters"
               />
             </div>
-
-            {/* University */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
               <select
-                name="university_id"
-                value={form.university_id}
-                onChange={handleChange}
+                value={university_id}
+                onChange={(e) => setUniversityId(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
               >
-                <option value="" disabled>Select university</option>
-                {universities.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
+                <option value="">Select University</option>
+                {universities.map((uni) => (
+                  <option key={uni.id} value={uni.id.toString()}>
+                    {uni.name}
                   </option>
                 ))}
               </select>
             </div>
-
-            {/* Error */}
             {error && <p className="text-red-600 text-sm">{error}</p>}
-
-            {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition disabled:opacity-50"
+              className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition"
             >
-              {loading ? 'Registering...' : 'Register'}
+              Register
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Already have an account?{' '}
-            <a href="/login" className="text-blue-600 hover:underline">
-              Login here
-            </a>
-          </p>
         </div>
       </main>
     </>
