@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useUser } from '@/contexts/UserContext'; // Import hook useUser
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isLoading, logout } = useUser(); // Ambil status pengguna dari konteks
 
+  // Hapus 'Login' dari daftar navigasi utama karena akan ditangani secara dinamis
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Quiz', href: '/quiz' },
     { label: 'Credit', href: '/credit' },
     { label: 'About', href: '/about' },
     { label: 'Acknowledgment', href: '/acknowledgment' },
-    { label: 'Login', href: '/login' },
   ];
 
   return (
@@ -21,15 +23,14 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
-  href="/"
-  className="text-2xl font-[Bauhaus93] bg-gradient-to-r from-green-800 to-blue-600 bg-clip-text text-transparent"
->
-  Idiomatch
-</Link>
-
+            href="/"
+            className="text-2xl font-[Bauhaus93] bg-gradient-to-r from-green-800 to-blue-600 bg-clip-text text-transparent"
+          >
+            Idiomatch
+          </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
               <Link
                 key={item.label}
@@ -39,6 +40,29 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+
+            {/* Bagian Dinamis untuk Login/Logout */}
+            <div className="flex items-center space-x-4">
+              {isLoading ? (
+                <div className="h-8 w-24 bg-gray-200 rounded-md animate-pulse"></div>
+              ) : user ? (
+                <>
+                  <span className="font-medium text-gray-700">Hi, {user.full_name}</span>
+                  {user.is_admin && (
+                    <Link href="/admin/dashboard" className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                      Admin
+                    </Link>
+                  )}
+                  <button onClick={logout} className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" className="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-md hover:bg-green-800">
+                  Login
+                </Link>
+              )}
+            </div>
           </nav>
 
           {/* Mobile Burger */}
@@ -47,12 +71,7 @@ export default function Header() {
             className="md:hidden text-gray-700 focus:outline-none"
             aria-label="Toggle menu"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -75,9 +94,34 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            <hr className="my-2" />
+            
+            {/* Bagian Dinamis untuk Mobile */}
+            <div className="px-4 py-2">
+               {isLoading ? (
+                <div className="h-8 w-full bg-gray-200 rounded-md animate-pulse"></div>
+              ) : user ? (
+                <div className="space-y-3">
+                    <p className="font-medium text-gray-800">Hi, {user.full_name}</p>
+                    {user.is_admin && (
+                        <Link href="/admin/dashboard" onClick={() => setIsOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-white bg-blue-600 rounded-md">
+                            Admin Dashboard
+                        </Link>
+                    )}
+                    <button onClick={() => {logout(); setIsOpen(false);}} className="block w-full text-left px-4 py-2 text-sm text-white bg-red-600 rounded-md">
+                        Logout
+                    </button>
+                </div>
+              ) : (
+                 <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center px-4 py-2 text-white bg-green-700 rounded-md transition">
+                    Login
+                 </Link>
+              )}
+            </div>
           </nav>
         )}
       </div>
     </header>
   );
 }
+
