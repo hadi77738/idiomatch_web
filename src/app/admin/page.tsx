@@ -14,12 +14,21 @@ type Idiom = {
   sentence_translation: string;
   example_conversation: string;
 };
+type QuizAttempt = {          // ← type baru
+  id: number;
+  user: { full_name: string };
+  score: number;
+  total_questions: number;
+  created_at: string;
+};
 
 export default function AdminPage() {
   const router = useRouter();
   const [units, setUnits] = useState<Unit[]>([]);
   const [idioms, setIdioms] = useState<Idiom[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
+  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([])
+
 
   const [showIdiomForm, setShowIdiomForm] = useState(false);
   const [showUnitForm, setShowUnitForm] = useState(false);
@@ -41,7 +50,14 @@ export default function AdminPage() {
   useEffect(() => {
     fetchUnits();
     fetchIdioms();
+    fetchQuizAttempts();
   }, []);
+
+  const fetchQuizAttempts = async () => {          // ← fungsi baru
+    const res = await fetch('/api/quiz-attempts');
+    const data: QuizAttempt[] = await res.json();
+    setQuizAttempts(data);
+  };
 
   const fetchUnits = async () => {
     const res = await fetch('/api/units');
@@ -124,7 +140,7 @@ export default function AdminPage() {
       {/* Background */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpg')" }}
+        style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
       <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
 
@@ -140,6 +156,34 @@ export default function AdminPage() {
               Logout
             </button>
           </div>
+
+          {/* ========== QUIZ ATTEMPTS ========== */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold mb-4">Recent Quiz Attempts</h2>
+            <div className="rounded-xl bg-white/80 backdrop-blur-sm shadow overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Name</th>
+                    <th className="px-4 py-3 text-left">Score</th>
+                    <th className="px-4 py-3 text-left">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quizAttempts.map((qa) => (
+                    <tr key={qa.id} className="border-t">
+                      <td className="px-4 py-3">{qa.user.full_name}</td>
+                      <td className="px-4 py-3">{qa.score}/{qa.total_questions}</td>
+                      <td className="px-4 py-3">
+                        {new Date(qa.created_at).toLocaleString('id-ID')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
 
           {/* Units */}
           <section className="mb-12">
