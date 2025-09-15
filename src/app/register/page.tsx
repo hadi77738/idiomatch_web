@@ -42,7 +42,7 @@ export default function RegisterPage() {
       {/* Background */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpg')" }}
+        style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
       <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
 
