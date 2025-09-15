@@ -15,8 +15,18 @@ export default function RegisterPage() {
   useEffect(() => {
     fetch('/api/universities')
       .then((res) => res.json())
-      .then((data) => setUniversities(data))
-      .catch((err) => console.error('Failed to fetch universities:', err));
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUniversities(data);
+        } else {
+          console.error('Unexpected data format:', data);
+          setError('Failed to load universities');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch universities:', err);
+        setError('Failed to load universities');
+      });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +52,7 @@ export default function RegisterPage() {
       {/* Background */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpeg')" }}
+        style={{ backgroundImage: "url('/bg.jpg')" }}
       />
       <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
 
@@ -58,7 +68,6 @@ export default function RegisterPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                placeholder="e.g. Budi Santoso"
               />
             </div>
             <div>
@@ -69,7 +78,6 @@ export default function RegisterPage() {
                 onChange={(e) => setNim(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                placeholder="e.g. 123456789"
               />
             </div>
             <div>
@@ -80,7 +88,6 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                placeholder="At least 6 characters"
               />
             </div>
             <div>
