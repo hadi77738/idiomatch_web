@@ -14,9 +14,9 @@ type Idiom = {
   sentence_translation: string;
   example_conversation: string;
 };
-type QuizAttempt = {          // ← type baru
+type QuizAttempt = {
   id: number;
-  user: { full_name: string };
+  full_name: string; // ← tambahkan
   score: number;
   total_questions: number;
   created_at: string;
@@ -170,16 +170,16 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {quizAttempts.map((qa) => (
-                    <tr key={qa.id} className="border-t">
-                      <td className="px-4 py-3">{qa.user.full_name}</td>
-                      <td className="px-4 py-3">{qa.score}/{qa.total_questions}</td>
-                      <td className="px-4 py-3">
-                        {new Date(qa.created_at).toLocaleString('id-ID')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+          {quizAttempts.map((qa) => (
+            <tr key={qa.id} className="border-t">
+              <td className="px-4 py-3">{qa.full_name}</td>
+              <td className="px-4 py-3">{qa.score}/{qa.total_questions}</td>
+              <td className="px-4 py-3">
+                {new Date(qa.created_at).toLocaleString('id-ID')}
+              </td>
+            </tr>
+          ))}
+        </tbody>
               </table>
             </div>
           </section>

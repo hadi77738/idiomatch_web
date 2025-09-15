@@ -5,18 +5,19 @@ import pool from '@/lib/db';
 // GET | return 50 quiz attempts terbaru
 export async function GET() {
   try {
-    const result = await pool.query(`
-      SELECT
-        qa.id,
-        u.full_name,
-        qa.score,
-        qa.total_questions,
-        qa.created_at
-      FROM quiz_attempts qa
-      JOIN users u ON u.id = qa.user_id
-      ORDER BY qa.created_at DESC
-      LIMIT 50
-    `);
+    // di /api/quiz-attempts/route.ts
+const result = await pool.query(`
+  SELECT
+    qa.id,
+    json_build_object('full_name', u.full_name) AS user,
+    qa.score,
+    qa.total_questions,
+    qa.created_at
+  FROM quiz_attempts qa
+  JOIN users u ON u.id = qa.user_id
+  ORDER BY qa.created_at DESC
+  LIMIT 50
+`);
     return NextResponse.json(result.rows);
   } catch (err) {
     console.error('GET quiz attempts error:', err);
