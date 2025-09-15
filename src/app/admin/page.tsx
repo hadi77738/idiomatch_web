@@ -27,7 +27,8 @@ export default function AdminPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [idioms, setIdioms] = useState<Idiom[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
-  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([])
+  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
+  
 
 
   const [showIdiomForm, setShowIdiomForm] = useState(false);
