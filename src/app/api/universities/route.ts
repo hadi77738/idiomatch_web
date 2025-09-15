@@ -1,3 +1,4 @@
+// src/app/api/universities/route.ts
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
@@ -7,6 +8,6 @@ export async function GET() {
     return NextResponse.json(result.rows);
   } catch (err) {
     console.error('Universities error:', err);
-    return NextResponse.json({ error: 'Gagal memuat universitas' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load universities' }, { status: 500 });
   }
 }

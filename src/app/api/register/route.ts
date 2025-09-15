@@ -1,28 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
+// src/app/api/register/route.ts
+import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const { full_name, nim, password, university_id } = await req.json();
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
-
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      const insertUser = await client.query(
-        'INSERT INTO users (full_name, nim, password, university_id, is_admin) VALUES ($1, $2, $3, $4, FALSE) RETURNING id',
-        [full_name, nim, hashedPassword, university_id]
-      );
-      await client.query('COMMIT');
-      return NextResponse.json({ success: true, userId: insertUser.rows[0].id });
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
+    if (!full_name || !nim || !password || !university_id) {
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
+
+    const existing = await pool.query('SELECT id FROM users WHERE nim = $1', [nim]);
+    if (existing.rows.length > 0) {
+      return NextResponse.json({ error: 'Student ID already registered' }, { status: 409 });
+    }
+
+    const hashed = await bcrypt.hash(password, 12);
+    const result = await pool.query(
+      `INSERT INTO users (full_name, nim, password, university_id, is_admin)
+       VALUES ($1, $2, $3, $4, false)
+       RETURNING id, full_name, nim, university_id, is_admin`,
+      [full_name, nim, hashed, university_id]
+    );
+
+    return NextResponse.json({ user: result.rows[0] }, { status: 201 });
   } catch (err) {
     console.error('Register error:', err);
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
