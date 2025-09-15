@@ -1,29 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import pool from '@/lib/db';
-
-const JWT_SECRET = process.env.JWT_SECRET || 's3cr3t';
+import { serialize } from 'cookie';
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
 
-    const res = await pool.query('SELECT id, username, password FROM users WHERE username = $1', [username]);
+    const res = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     const user = res.rows[0];
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+    // 1. Buat token acak yang aman
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    
+    // 2. Tentukan waktu kedaluwarsa (misal: 1 jam dari sekarang)
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    const response = NextResponse.json({ success: true });
-    response.cookies.set('token', token, {
+    // 3. Simpan sesi ke database
+    await pool.query(
+      'INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [user.id, sessionToken, expiresAt]
+    );
+    
+    // 4. Atur cookie di respons
+    const response = NextResponse.json({ success: true, user: {id: user.id, full_name: user.full_name, is_admin: user.is_admin} });
+    response.cookies.set('session_token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 hari
+      sameSite: 'strict',
+      maxAge: 60 * 60, // 1 jam
     });
 
     return response;
@@ -32,3 +43,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
+
