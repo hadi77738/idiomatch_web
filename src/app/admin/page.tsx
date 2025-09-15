@@ -16,7 +16,7 @@ type Idiom = {
 };
 type QuizAttempt = {
   id: number;
-  user: { full_name: string }; // ← nested
+  user: { full_name: string; nim: string };  // ← nested
   score: number;
   total_questions: number;
   created_at: string;
@@ -164,23 +164,25 @@ export default function AdminPage() {
             <div className="rounded-xl bg-white/80 backdrop-blur-sm shadow overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Score</th>
-                    <th className="px-4 py-3 text-left">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-          {quizAttempts.map((qa) => (
-            <tr key={qa.id} className="border-t">
-              <td className="px-4 py-3">{qa.user.full_name}</td>
-              <td className="px-4 py-3">{qa.score}/{qa.total_questions}</td>
-              <td className="px-4 py-3">
-                {new Date(qa.created_at).toLocaleString('id-ID')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
+  <tr>
+    <th className="px-4 py-3 text-left">Name</th>
+    <th className="px-4 py-3 text-left">NIM</th>
+    <th className="px-4 py-3 text-left">Score</th>
+    <th className="px-4 py-3 text-left">Date</th>
+  </tr>
+</thead>
+<tbody>
+  {quizAttempts.map(qa => (
+    <tr key={qa.id} className="border-t">
+      <td className="px-4 py-3">{qa.user.full_name}</td>
+      <td className="px-4 py-3">{qa.user.nim}</td>
+      <td className="px-4 py-3">{qa.score}/{qa.total_questions}</td>
+      <td className="px-4 py-3">
+        {new Date(qa.created_at).toLocaleString('id-ID')}
+      </td>
+    </tr>
+  ))}
+</tbody>
               </table>
             </div>
           </section>

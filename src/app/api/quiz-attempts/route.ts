@@ -9,7 +9,7 @@ export async function GET() {
 const result = await pool.query(`
   SELECT
     qa.id,
-    json_build_object('full_name', u.full_name) AS user,
+    json_build_object('full_name', u.full_name, 'nim', u.nim) AS user,
     qa.score,
     qa.total_questions,
     qa.created_at
