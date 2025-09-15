@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch university list
   useEffect(() => {
     fetch('/api/universities')
       .then((r) => r.json())
@@ -44,96 +43,98 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (!res.ok) return setError(data.error || 'Something went wrong');
-    router.push('/login'); // success → login
+    router.push('/login');
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow p-8">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-green-800 to-blue-600 bg-clip-text text-transparent mb-6 text-center">
-          Create Student Account
-        </h1>
+    <>
+      {/* Background image */}
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center"
+        style={{ backgroundImage: "url('/bg.jpeg')" }}
+      />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Full Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-            <input
-              name="full_name"
-              value={form.full_name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
-              placeholder="e.g. Budi Santoso"
-            />
-          </div>
+      <main className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow p-8">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-green-800 to-blue-600 bg-clip-text text-transparent mb-6 text-center">
+            Create Student Account
+          </h1>
 
-          {/* Student ID (NIM) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Student ID (NIM)</label>
-            <input
-              name="nim"
-              value={form.nim}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
-              placeholder="e.g. 123456789"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input
+                name="full_name"
+                value={form.full_name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                placeholder="e.g. Budi Santoso"
+              />
+            </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
-              placeholder="At least 6 characters"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Student ID (NIM)</label>
+              <input
+                name="nim"
+                value={form.nim}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                placeholder="e.g. 123456789"
+              />
+            </div>
 
-          {/* University */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
-            <select
-              name="university_id"
-              value={form.university_id}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+                placeholder="At least 6 characters"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
+              <select
+                name="university_id"
+                value={form.university_id}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600"
+              >
+                <option value="" disabled>Select university</option>
+                {universities.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold disabled:opacity-60 hover:from-green-800 hover:to-blue-700 transition"
             >
-              <option value="" disabled>Select university</option>
-              {universities.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              {loading ? 'Registering...' : 'Register'}
+            </button>
+          </form>
 
-          {/* Error */}
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold disabled:opacity-60 hover:from-green-800 hover:to-blue-700 transition"
-          >
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Already have an account?{' '}
-          <a href="/login" className="text-blue-600 hover:underline">
-            Login here
-          </a>
-        </p>
-      </div>
-    </main>
+          <p className="text-center text-sm text-gray-600 mt-6">
+            Already have an account?{' '}
+            <a href="/login" className="text-blue-600 hover:underline">
+              Login here
+            </a>
+          </p>
+        </div>
+      </main>
+    </>
   );
 }
