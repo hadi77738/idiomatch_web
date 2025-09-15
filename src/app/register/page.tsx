@@ -69,6 +69,7 @@ export default function RegisterPage() {
                 onChange={(e) => setNim(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
+                placeholder="e.g. 123456789"
               />
             </div>
             <div>
@@ -79,6 +80,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
+                placeholder="At least 6 characters"
               />
             </div>
             <div>
