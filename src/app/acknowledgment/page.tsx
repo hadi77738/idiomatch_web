@@ -26,7 +26,7 @@ export default function AcknowledgmentPage() {
                 Research and Community Service Institute
               </h2>
               <p className="text-gray-700">
-                Universitas Muhammadiyah Semarang (UMS) for funding, facilities and
+                Universitas Muhammadiyah Semarang (UNIMUS) for funding, facilities and
                 administrative support throughout the development of Idiomatch.
               </p>
             </div>
