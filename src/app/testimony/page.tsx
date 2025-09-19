@@ -1,119 +1,97 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Testimony = {
   id: number;
-  full_name: string;
+  user_name: string;
   content: string;
   created_at: string;
 };
 
 export default function TestimonyPage() {
+  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [newTesti, setNewTesti] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
-  const [list, setList] = useState<Testimony[]>([]);
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // global loading
 
   useEffect(() => {
-    // 1. cek login dulu (sama persis seperti halaman quiz)
+    // cek user login
     fetch('/api/auth/me')
-      .then((res) => {
-        if (!res.ok) throw new Error('Not authenticated');
-        return res.json();
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.user) setIsAuthorized(true);
       })
-      .then((data) => {
-        if (data.user) setLoggedIn(true);
-        // 2. ambil list testimoni (publik)
-        return fetch('/api/testimonies');
-      })
-      .then((res) => res.json())
-      .then((data) => setList(data))
-      .catch(() => router.push('/login'))
-      .finally(() => setIsLoading(false));
-  }, [router]);
+      .catch(() => setIsAuthorized(false));
 
-  const submit = async () => {
-    if (!content.trim()) return;
-    setLoading(true);
-    const res = await fetch('/api/testimonies', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content }),
-    });
-    setLoading(false);
-    if (res.ok) {
-      setContent('');
-      // reload list
-      const { json } = await fetch('/api/testimonies').then((r) => r.json().then((j) => ({ json: j })));
-      setList(json);
-    } else alert('Gagal kirim testimoni');
+    // load testimonies
+    fetch('/api/testimony')
+      .then(res => res.json())
+      .then(data => setTestimonies(data || []));
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!newTesti.trim()) return;
+    try {
+      const res = await fetch('/api/testimony', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newTesti }),
+      });
+      if (res.ok) {
+        setNewTesti('');
+        // refresh list
+        const data = await fetch('/api/testimony').then(r => r.json());
+        setTestimonies(data);
+      } else if (res.status === 401) {
+        router.push('/login');
+      }
+    } catch (err) {
+      console.error('Gagal tambah testimony:', err);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    );
-  }
-
   return (
-    <>
-      {/* Background seragam */}
-      <div
-        className="fixed inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpg')" }}
-      />
-      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
+    <main className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 px-4 py-16">
+      <div className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
+        <h2 className="text-2xl font-bold mb-6 text-center">Testimoni Pengguna</h2>
 
-      <main className="min-h-screen text-gray-800">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">Testimoni Pengguna</h1>
-            <p className="mt-2 text-gray-600">Ceritakan pengalamanmu menggunakan platform ini.</p>
+        {/* Form hanya jika login */}
+        {isAuthorized && (
+          <div className="mb-8">
+            <textarea
+              value={newTesti}
+              onChange={(e) => setNewTesti(e.target.value)}
+              placeholder="Tulis testimoni Anda..."
+              className="w-full p-3 border rounded-xl focus:ring-green-500 focus:border-green-500"
+            />
+            <button
+              onClick={handleSubmit}
+              className="mt-3 w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition"
+            >
+              Kirim Testimoni
+            </button>
           </div>
+        )}
 
-          {/* Form kirim (hanya login) */}
-          {loggedIn && (
-            <div className="mb-10 p-6 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg">
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Tulis testimonimu di sini..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
-                rows={4}
-              />
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={submit}
-                  disabled={loading}
-                  className={`px-6 py-2 rounded-xl font-semibold text-white transition
-                    ${loading ? 'bg-gray-400' : 'bg-gradient-to-r from-green-700 to-blue-600 hover:from-green-800 hover:to-blue-700'}`}
-                >
-                  {loading ? 'Menyimpan...' : 'Kirim Testimoni'}
-                </button>
+        {/* List testimony */}
+        <div className="space-y-4">
+          {testimonies.length > 0 ? (
+            testimonies.map((t) => (
+              <div key={t.id} className="border rounded-xl p-4 bg-white/70">
+                <p className="text-gray-800">{t.content}</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Oleh <span className="font-medium">{t.user_name}</span> ·{' '}
+                  {new Date(t.created_at).toLocaleDateString('id-ID')}
+                </p>
               </div>
-            </div>
+            ))
+          ) : (
+            <p className="text-gray-700 text-center">Belum ada testimoni.</p>
           )}
-
-          {/* Daftar testimoni */}
-          <div className="space-y-6">
-            {list.length === 0 && <p className="text-center text-gray-600">Belum ada testimoni.</p>}
-            {list.map((t) => (
-              <div key={t.id} className="p-5 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-gray-900">{t.full_name}</p>
-                  <p className="text-xs text-gray-500">{new Date(t.created_at).toLocaleString('id-ID')}</p>
-                </div>
-                <p className="mt-3 text-gray-700 whitespace-pre-wrap">{t.content}</p>
-              </div>
-            ))}
-          </div>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
