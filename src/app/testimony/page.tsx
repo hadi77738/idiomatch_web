@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type Testimony = {
   id: number;
@@ -9,21 +10,30 @@ type Testimony = {
 };
 
 export default function TestimonyPage() {
+  const router = useRouter();
   const [list, setList] = useState<Testimony[]>([]);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // global loading
 
   useEffect(() => {
-    setLoggedIn(document.cookie.includes('token='));
-    fetchList();
-  }, []);
-
-  const fetchList = async () => {
-    const res = await fetch('/api/testimonies');
-    const data = await res.json();
-    setList(data);
-  };
+    // 1. cek login dulu (sama persis seperti halaman quiz)
+    fetch('/api/auth/me')
+      .then((res) => {
+        if (!res.ok) throw new Error('Not authenticated');
+        return res.json();
+      })
+      .then((data) => {
+        if (data.user) setLoggedIn(true);
+        // 2. ambil list testimoni (publik)
+        return fetch('/api/testimonies');
+      })
+      .then((res) => res.json())
+      .then((data) => setList(data))
+      .catch(() => router.push('/login'))
+      .finally(() => setIsLoading(false));
+  }, [router]);
 
   const submit = async () => {
     if (!content.trim()) return;
@@ -36,13 +46,23 @@ export default function TestimonyPage() {
     setLoading(false);
     if (res.ok) {
       setContent('');
-      fetchList();
+      // reload list
+      const { json } = await fetch('/api/testimonies').then((r) => r.json().then((j) => ({ json: j })));
+      setList(json);
     } else alert('Gagal kirim testimoni');
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <>
-      {/* Background sama seperti halaman admin */}
+      {/* Background seragam */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpg')" }}
@@ -51,17 +71,12 @@ export default function TestimonyPage() {
 
       <main className="min-h-screen text-gray-800">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          {/* Header */}
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
-              Testimoni Pengguna
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Ceritakan pengalamanmu menggunakan platform ini.
-            </p>
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">Testimoni Pengguna</h1>
+            <p className="mt-2 text-gray-600">Ceritakan pengalamanmu menggunakan platform ini.</p>
           </div>
 
-          {/* Form kirim testimoni (hanya login) */}
+          {/* Form kirim (hanya login) */}
           {loggedIn && (
             <div className="mb-10 p-6 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg">
               <textarea
@@ -86,19 +101,12 @@ export default function TestimonyPage() {
 
           {/* Daftar testimoni */}
           <div className="space-y-6">
-            {list.length === 0 && (
-              <p className="text-center text-gray-600">Belum ada testimoni.</p>
-            )}
+            {list.length === 0 && <p className="text-center text-gray-600">Belum ada testimoni.</p>}
             {list.map((t) => (
-              <div
-                key={t.id}
-                className="p-5 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg"
-              >
+              <div key={t.id} className="p-5 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg">
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-gray-900">{t.full_name}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(t.created_at).toLocaleString('id-ID')}
-                  </p>
+                  <p className="text-xs text-gray-500">{new Date(t.created_at).toLocaleString('id-ID')}</p>
                 </div>
                 <p className="mt-3 text-gray-700 whitespace-pre-wrap">{t.content}</p>
               </div>

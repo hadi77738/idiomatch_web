@@ -15,7 +15,7 @@ export default function Header() {
     { label: 'Credit', href: '/credit' },
     { label: 'About', href: '/about' },
     { label: 'Acknowledgment', href: '/acknowledgment' },
-    { label: 'Testimonies', href: '/testimonies' },
+    { label: 'Testimonies', href: '/testimony' },
   ];
 
   return (
