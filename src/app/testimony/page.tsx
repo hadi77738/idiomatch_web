@@ -1,97 +1,103 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
 
-type Testimony = {
+interface Testimony {
   id: number;
-  user_name: string;
   content: string;
   created_at: string;
-};
+  user_name: string;
+}
 
 export default function TestimonyPage() {
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
-  const [newTesti, setNewTesti] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const router = useRouter();
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // cek user login
-    fetch('/api/auth/me')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.user) setIsAuthorized(true);
-      })
-      .catch(() => setIsAuthorized(false));
-
-    // load testimonies
-    fetch('/api/testimony')
-      .then(res => res.json())
-      .then(data => setTestimonies(data || []));
+    fetch("/api/testimony")
+      .then((res) => res.json())
+      .then((data) => setTestimonies(data))
+      .catch(() => setTestimonies([]));
   }, []);
 
-  const handleSubmit = async () => {
-    if (!newTesti.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+
+    setLoading(true);
     try {
-      const res = await fetch('/api/testimony', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newTesti }),
+      const res = await fetch("/api/testimony", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
       });
+
       if (res.ok) {
-        setNewTesti('');
-        // refresh list
-        const data = await fetch('/api/testimony').then(r => r.json());
+        setContent("");
+        const data = await fetch("/api/testimony").then((r) => r.json());
         setTestimonies(data);
-      } else if (res.status === 401) {
-        router.push('/login');
       }
-    } catch (err) {
-      console.error('Gagal tambah testimony:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 px-4 py-16">
-      <div className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
-        <h2 className="text-2xl font-bold mb-6 text-center">Testimoni Pengguna</h2>
+    <div className="relative min-h-screen text-white flex flex-col items-center px-4 py-10">
+      {/* Background sama dengan quiz */}
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center"
+        style={{ backgroundImage: "url('/bg.jpeg')" }}
+      />
 
-        {/* Form hanya jika login */}
-        {isAuthorized && (
-          <div className="mb-8">
-            <textarea
-              value={newTesti}
-              onChange={(e) => setNewTesti(e.target.value)}
-              placeholder="Tulis testimoni Anda..."
-              className="w-full p-3 border rounded-xl focus:ring-green-500 focus:border-green-500"
-            />
-            <button
-              onClick={handleSubmit}
-              className="mt-3 w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition"
-            >
-              Kirim Testimoni
-            </button>
-          </div>
-        )}
+      <div className="max-w-3xl w-full">
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 drop-shadow-lg">
+          Testimoni Pengguna
+        </h1>
 
-        {/* List testimony */}
-        <div className="space-y-4">
-          {testimonies.length > 0 ? (
-            testimonies.map((t) => (
-              <div key={t.id} className="border rounded-xl p-4 bg-white/70">
-                <p className="text-gray-800">{t.content}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Oleh <span className="font-medium">{t.user_name}</span> ·{' '}
-                  {new Date(t.created_at).toLocaleDateString('id-ID')}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-700 text-center">Belum ada testimoni.</p>
+        {/* Form tambah testimoni */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-black/40 backdrop-blur-md rounded-2xl shadow-lg p-6 mb-10"
+        >
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="w-full bg-transparent border border-white/30 rounded-xl p-3 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+            placeholder="Tulis pengalamanmu di sini..."
+            rows={3}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-4 px-6 py-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 font-semibold shadow-md hover:scale-105 transition-transform"
+          >
+            {loading ? "Mengirim..." : "Kirim Testimoni"}
+          </button>
+        </form>
+
+        {/* List testimoni */}
+        <div className="space-y-6">
+          {testimonies.length === 0 && (
+            <p className="text-center text-gray-200 drop-shadow">
+              Belum ada testimoni. Jadilah yang pertama!
+            </p>
           )}
+          {testimonies.map((t) => (
+            <div
+              key={t.id}
+              className="bg-black/40 backdrop-blur-lg rounded-2xl p-6 shadow-md border border-white/20 hover:shadow-xl transition-all"
+            >
+              <p className="text-lg italic text-gray-100">“{t.content}”</p>
+              <div className="mt-3 text-sm text-gray-300 flex justify-between">
+                <span>— {t.user_name}</span>
+                <span>{new Date(t.created_at).toLocaleDateString("id-ID")}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
