@@ -1,103 +1,120 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-interface Testimony {
+type Testimony = {
   id: number;
+  user_name: string;
   content: string;
   created_at: string;
-  user_name: string;
-}
+};
 
 export default function TestimonyPage() {
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
-  const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [newTesti, setNewTesti] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/testimony")
-      .then((res) => res.json())
-      .then((data) => setTestimonies(data))
-      .catch(() => setTestimonies([]));
+    fetch('/api/auth/me')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.user) setIsAuthorized(true);
+      })
+      .catch(() => setIsAuthorized(false));
+
+    fetch('/api/testimony')
+      .then(res => res.json())
+      .then(data => setTestimonies(data || []));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim()) return;
-
-    setLoading(true);
+  const handleSubmit = async () => {
+    if (!newTesti.trim()) return;
     try {
-      const res = await fetch("/api/testimony", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+      const res = await fetch('/api/testimony', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newTesti }),
       });
-
       if (res.ok) {
-        setContent("");
-        const data = await fetch("/api/testimony").then((r) => r.json());
+        setNewTesti('');
+        const data = await fetch('/api/testimony').then(r => r.json());
         setTestimonies(data);
+      } else if (res.status === 401) {
+        router.push('/login');
       }
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Gagal tambah testimony:', err);
     }
   };
 
   return (
-    <div className="relative min-h-screen text-white flex flex-col items-center px-4 py-10">
-      {/* Background sama dengan quiz */}
+    <>
+      {/* Background image + overlay */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
+      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
 
-      <div className="max-w-3xl w-full">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 drop-shadow-lg">
-          Testimoni Pengguna
-        </h1>
-
-        {/* Form tambah testimoni */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-black/40 backdrop-blur-md rounded-2xl shadow-lg p-6 mb-10"
-        >
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full bg-transparent border border-white/30 rounded-xl p-3 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-            placeholder="Tulis pengalamanmu di sini..."
-            rows={3}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-4 px-6 py-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 font-semibold shadow-md hover:scale-105 transition-transform"
-          >
-            {loading ? "Mengirim..." : "Kirim Testimoni"}
-          </button>
-        </form>
-
-        {/* List testimoni */}
-        <div className="space-y-6">
-          {testimonies.length === 0 && (
-            <p className="text-center text-gray-200 drop-shadow">
-              Belum ada testimoni. Jadilah yang pertama!
+      <main className="min-h-screen text-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          {/* Header */}
+          <section className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-green-800 to-blue-600 bg-clip-text text-transparent mb-2">
+              Testimoni Pengguna
+            </h1>
+            <p className="text-gray-800 max-w-xl mx-auto">
+              Cerita & pengalaman mereka yang telah menggunakan layanan kami.
             </p>
-          )}
-          {testimonies.map((t) => (
-            <div
-              key={t.id}
-              className="bg-black/40 backdrop-blur-lg rounded-2xl p-6 shadow-md border border-white/20 hover:shadow-xl transition-all"
-            >
-              <p className="text-lg italic text-gray-100">“{t.content}”</p>
-              <div className="mt-3 text-sm text-gray-300 flex justify-between">
-                <span>— {t.user_name}</span>
-                <span>{new Date(t.created_at).toLocaleDateString("id-ID")}</span>
+          </section>
+
+          {/* Form kirim testimoni */}
+          {isAuthorized && (
+            <section className="mb-10">
+              <div className="max-w-2xl mx-auto bg-white/70 backdrop-blur-sm rounded-2xl shadow p-5">
+                <textarea
+                  value={newTesti}
+                  onChange={(e) => setNewTesti(e.target.value)}
+                  placeholder="Tulis testimoni Anda..."
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/80"
+                />
+                <button
+                  onClick={handleSubmit}
+                  className="mt-4 w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition"
+                >
+                  Kirim Testimoni
+                </button>
               </div>
-            </div>
-          ))}
+            </section>
+          )}
+
+          {/* List testimoni */}
+          <section>
+            {testimonies.length > 0 ? (
+              <div className="grid gap-5 md:grid-cols-2">
+                {testimonies.map((t) => (
+                  <div
+                    key={t.id}
+                    className="p-5 rounded-2xl bg-white/70 backdrop-blur-sm shadow hover:shadow-lg transition"
+                  >
+                    <p className="text-gray-800 italic">“{t.content}”</p>
+                    <div className="mt-3 text-sm text-gray-600">
+                      <span className="font-semibold text-green-800">{t.user_name}</span>
+                      <span className="mx-2">·</span>
+                      <span>{new Date(t.created_at).toLocaleDateString('id-ID')}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-700">Belum ada testimoni.</p>
+            )}
+          </section>
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
