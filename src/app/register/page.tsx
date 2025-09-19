@@ -9,12 +9,14 @@ type University = { id: number; name: string };
 export default function RegisterPage() {
   const router = useRouter();
   const [universities, setUniversities] = useState<University[]>([]);
+  const [newUniversity, setNewUniversity] = useState('');
+  const [showNewUni, setShowNewUni] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     nim: '',
     password: '',
     university_id: '',
-    username: '', // Tambahkan field username
+    username: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,18 +28,29 @@ export default function RegisterPage() {
       .catch(() => setError('Failed to load universities'));
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (name === 'university_id') {
+      setShowNewUni(value === 'new');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    const payload = {
+      ...form,
+      university_id: form.university_id === 'new' ? 'new' : Number(form.university_id),
+      new_university: showNewUni ? newUniversity.trim() : undefined,
+    };
+
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -126,8 +139,25 @@ export default function RegisterPage() {
                     {u.name}
                   </option>
                 ))}
+                <option value="new">➕ Tambahkan Universitas Anda</option>
               </select>
             </div>
+
+            {showNewUni && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Universitas Baru
+                </label>
+                <input
+                  type="text"
+                  value={newUniversity}
+                  onChange={(e) => setNewUniversity(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white/90"
+                  placeholder="Ketik nama universitas"
+                />
+              </div>
+            )}
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
