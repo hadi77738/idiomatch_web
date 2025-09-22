@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs'; // Diubah dari 'bcrypt' menjadi 'bcryptjs'
+import { SignJWT } from 'jose';
 
-// PENTING: Untuk aplikasi production, JANGAN PERNAH simpan password sebagai teks biasa.
-// Gunakan library seperti 'bcrypt' untuk hashing dan verifikasi.
-// import bcrypt from 'bcryptjs';
+// Fungsi untuk membuat JWT Token
+async function createToken(userId: number, username: string) {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-default-super-secret-key');
+  const token = await new SignJWT({ userId, username })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h') // Token berlaku selama 24 jam
+    .sign(secret);
+  return token;
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,45 +22,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
-    // 1. Cari user berdasarkan username
-    const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    // 1. Ambil data user HANYA berdasarkan username
+    const userResult = await pool.query('SELECT * FROM users WHERE username = $1;', [username]);
 
-    if (userResult.rows.length === 0) {
+    if (userResult.rowCount === 0) {
+      // Username tidak ditemukan
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     const user = userResult.rows[0];
 
-    // 2. Verifikasi password (SANGAT TIDAK AMAN, HANYA UNTUK CONTOH)
-    // Di aplikasi nyata, Anda harus menggunakan:
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
-    const isPasswordValid = user.password === password;
+    // 2. Bandingkan password yang diinput dengan hash di database
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordValid) {
+    if (!passwordMatch) {
+      // Password tidak cocok
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // 3. Buat session token
-    const token = crypto.randomBytes(64).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // Token berlaku 24 jam
-
-    // 4. Simpan session di database
-    await pool.query(
-      'INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)',
-      [user.id, token, expiresAt]
-    );
-
-    // 5. Kirim token dan data user (tanpa password) kembali ke client
+    // 3. Jika berhasil, buat dan kirim token
+    const token = await createToken(user.id, user.username);
+    
+    // Jangan kirim password kembali ke client
     const { password: _, ...userWithoutPassword } = user;
 
     return NextResponse.json({ 
       message: 'Login successful', 
-      token,
-      user: userWithoutPassword
+      user: userWithoutPassword, 
+      token 
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal Server Error', details: errorMessage }, { status: 500 });
   }
 }
+
