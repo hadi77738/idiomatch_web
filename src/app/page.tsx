@@ -39,7 +39,7 @@ export default function HomePage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
-      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
+      <div className="fixed inset-0 -z-10 bg-white/20 backdrop-blur-sm" />
 
       {/* Content */}
       <main className="min-h-screen text-gray-900">
