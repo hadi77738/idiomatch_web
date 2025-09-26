@@ -54,7 +54,7 @@ export default function LoginPage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
-      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
+      <div className="fixed inset-0 -z-10 bg-white/20 backdrop-blur-sm" />
 
       <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow p-8">

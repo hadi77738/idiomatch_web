@@ -143,7 +143,7 @@ export default function AdminPage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
-      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
+      <div className="fixed inset-0 -z-10 bg-white/20 backdrop-blur-sm" />
 
       <main className="min-h-screen text-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

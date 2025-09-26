@@ -140,7 +140,7 @@ export default function QuizPage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.jpeg')" }}
       />
-      <div className="fixed inset-0 -z-10 bg-white/60 backdrop-blur-sm" />
+      <div className="fixed inset-0 -z-10 bg-white/20 backdrop-blur-sm" />
       <main className="min-h-screen flex items-center justify-center text-gray-900 px-4">
         {questions.length > 0 ? (
         <div className="max-w-2xl w-full">

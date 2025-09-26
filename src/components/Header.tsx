@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useUser } from '@/contexts/UserContext'; // Import hook useUser
+import { useUser } from '@/contexts/UserContext';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isLoading, logout } = useUser(); // Ambil status pengguna dari konteks
+  const { user, isLoading, logout } = useUser();
 
-  // Hapus 'Login' dari daftar navigasi utama karena akan ditangani secara dinamis
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Quiz', href: '/quiz' },
@@ -42,15 +41,25 @@ export default function Header() {
               </Link>
             ))}
 
-            {/* Bagian Dinamis untuk Login/Logout */}
+            {/* Bagian Dinamis untuk Tombol Aksi */}
             <div className="flex items-center space-x-4">
+              
+              {/* === TOMBOL DOWNLOAD BARU (DESKTOP) === */}
+              <a 
+                href="/idiomatch-app.apk" 
+                download
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Download App
+              </a>
+
               {isLoading ? (
                 <div className="h-8 w-24 bg-gray-200 rounded-md animate-pulse"></div>
               ) : user ? (
                 <>
                   <span className="font-medium text-gray-700">Hi, {user.full_name}</span>
                   {user.is_admin && (
-                    <Link href="/admin/dashboard" className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <Link href="/admin/dashboard" className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700">
                       Admin
                     </Link>
                   )}
@@ -98,14 +107,25 @@ export default function Header() {
             <hr className="my-2" />
             
             {/* Bagian Dinamis untuk Mobile */}
-            <div className="px-4 py-2">
-               {isLoading ? (
+            <div className="px-4 py-2 space-y-3">
+
+              {/* === TOMBOL DOWNLOAD BARU (MOBILE) === */}
+              <a 
+                href="/idiomatch-app.apk" 
+                download
+                onClick={() => setIsOpen(false)}
+                className="block text-center px-4 py-2 text-white bg-blue-600 rounded-md transition"
+              >
+                Download App
+              </a>
+
+              {isLoading ? (
                 <div className="h-8 w-full bg-gray-200 rounded-md animate-pulse"></div>
               ) : user ? (
                 <div className="space-y-3">
                     <p className="font-medium text-gray-800">Hi, {user.full_name}</p>
                     {user.is_admin && (
-                        <Link href="/admin/dashboard" onClick={() => setIsOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-white bg-blue-600 rounded-md">
+                        <Link href="/admin/dashboard" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-2 text-sm text-white bg-purple-600 rounded-md">
                             Admin Dashboard
                         </Link>
                     )}
@@ -114,9 +134,9 @@ export default function Header() {
                     </button>
                 </div>
               ) : (
-                 <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center px-4 py-2 text-white bg-green-700 rounded-md transition">
+                  <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center px-4 py-2 text-white bg-green-700 rounded-md transition">
                     Login
-                 </Link>
+                  </Link>
               )}
             </div>
           </nav>
@@ -125,4 +145,3 @@ export default function Header() {
     </header>
   );
 }
-
