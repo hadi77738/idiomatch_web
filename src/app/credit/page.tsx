@@ -13,7 +13,9 @@ export default function CreditPage() {
   ];
 
   const students = [
-    { name: 'Your Full Name', major: 'English Education Study Program' },
+    { name: 'M. Nur Arifin S.S.', major: 'Dev Team' },
+    { name: 'Kikan Laila Arinil Haque', major: 'Dev Team' },
+    { name: 'Ahmad Hadi Lukmanul Hakim', major: 'Dev Team' },
     // Tambahkan nama mahasiswa lain di sini
   ];
 
