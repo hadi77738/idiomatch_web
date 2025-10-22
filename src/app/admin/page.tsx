@@ -24,6 +24,49 @@ type QuizAttempt = {
 
 export default function AdminPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  // ✅ Tambahkan blok pengecekan login & admin di sini
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          router.replace('/login');
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data.user?.is_admin) {
+          alert('Akses khusus admin.');
+          router.replace('/');
+          return;
+        }
+
+        setUser(data.user);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600">Memeriksa otentikasi...</p>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   const [units, setUnits] = useState<Unit[]>([]);
   const [idioms, setIdioms] = useState<Idiom[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
