@@ -62,33 +62,27 @@ export default function AdminPage() {
   /* ---------- AUTH GUARD ---------- */
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('token='))
-          ?.split('=')[1];
+  try {
+    // tidak perlu ambil token dari cookie manual
+    const res = await fetch('/api/auth/me', {
+      method: 'GET',
+      credentials: 'include', // <-- penting, agar cookie ikut dikirim
+    });
+    if (!res.ok) throw new Error('Unauthorized');
 
-        if (!token) throw new Error('No token');
-
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('Unauthorized');
-
-        const data: AuthMe = await res.json();
-        if (!data.is_admin) {
-          alert('Akses hanya untuk admin.');
-          router.replace('/');
-          return;
-        }
-
-        setUser(data);
-      } catch {
-        router.replace('/login');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const data: AuthMe = await res.json();
+    if (!data.is_admin) {
+      alert('Akses hanya untuk admin.');
+      router.replace('/');
+      return;
+    }
+    setUser(data);
+  } catch {
+    router.replace('/login');
+  } finally {
+    setLoading(false);
+  }
+};
 
     checkAuth();
   }, [router]);
