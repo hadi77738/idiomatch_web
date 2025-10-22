@@ -59,7 +59,7 @@ export default function Header() {
                 <>
                   <span className="font-medium text-gray-700">Hi, {user.full_name}</span>
                   {user.is_admin && (
-                    <Link href="/admin/dashboard" className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700">
+                    <Link href="/admin" className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700">
                       Admin
                     </Link>
                   )}
@@ -125,7 +125,7 @@ export default function Header() {
                 <div className="space-y-3">
                     <p className="font-medium text-gray-800">Hi, {user.full_name}</p>
                     {user.is_admin && (
-                        <Link href="/admin/dashboard" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-2 text-sm text-white bg-purple-600 rounded-md">
+                        <Link href="/admin" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-2 text-sm text-white bg-purple-600 rounded-md">
                             Admin Dashboard
                         </Link>
                     )}
