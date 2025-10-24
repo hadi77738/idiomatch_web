@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   try {
     // 1. ambil token dari cookie
     const cookieStore = cookies();
-    const token = (await cookieStore).get('token')?.value;
+    const token = (await cookieStore).get('session_token')?.value;
     if (!token)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
