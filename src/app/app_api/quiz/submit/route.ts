@@ -68,9 +68,9 @@ export async function POST(req: NextRequest) {
 
     // Insert – kolom full_name & nim tetap diisi (biar tidak break API lama)
     await pool.query(
-      'INSERT INTO quiz_attempts (user_id, score, total_questions, full_name, nim) VALUES ($1,$2,$3,$4,$5)',
-      [userId, score, total_questions, full_name, nim]
-    );
+  'INSERT INTO quiz_attempts (user_id, score, total_questions) VALUES ($1,$2,$3)',
+  [userId, score, total_questions]
+);
 
     return NextResponse.json(
       { message: 'Quiz score submitted successfully' },
