@@ -1,20 +1,22 @@
+// app/quiz/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// ... (kode lainnya tetap sama) ...
 type Question = {
   id: number;
   idioms: string;
   meaning_en: string;
   meaning_id: string;
-  options: string[]; // 4 pilihan
-  answer: string;    // meaning_id yang benar
+  options: string[];
+  answer: string;
 };
 
 export default function QuizPage() {
   const router = useRouter();
+
+  /* ---------- state ---------- */
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -24,80 +26,76 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
 
+  /* ---------- cek login + ambil soal ---------- */
   useEffect(() => {
-    // Cek status login
-    fetch('/api/auth/me')
-      .then(res => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((res) => {
         if (!res.ok) throw new Error('Not authenticated');
         return res.json();
       })
-      .then(data => {
-        if(data.user) {
-            setIsAuthorized(true);
-            // Ambil data kuis jika sudah login
-            return fetch('/api/quiz');
+      .then((data) => {
+        if (data.user) {
+          setIsAuthorized(true);
+          return fetch('/api/quiz', { credentials: 'include' });
         }
       })
-      .then(res => res && res.json())
-      .then(data => {
-        if(data) setQuestions(data);
+      .then((res) => res && res.json())
+      .then((data) => {
+        if (data) setQuestions(data);
       })
-      .catch(() => {
-        router.push('/login');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      .catch(() => router.push('/login'))
+      .finally(() => setIsLoading(false));
   }, [router]);
 
+  /* ---------- next / finish ---------- */
   const handleNext = async () => {
     if (!selected) return;
 
     const newAnswers = [...answers, selected];
     setAnswers(newAnswers);
 
+    /* belum selesai */
     if (index < questions.length - 1) {
       setIndex(index + 1);
       setSelected('');
-    } else {
-      // Kuis selesai, hitung skor
-      const correctAnswers = newAnswers.filter((a, i) => a === questions[i].answer).length;
-      const calculatedScore = Math.round((correctAnswers / questions.length) * 100);
-      setScore(calculatedScore);
-      
-      // Kirim hasil ke server untuk disimpan
-      try {
-        await fetch('/api/quiz/attempts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            score: calculatedScore,
-            total_questions: questions.length,
-          }),
-        });
-      } catch (error) {
-        console.error("Gagal menyimpan hasil kuis:", error);
-      } finally {
-        // Tampilkan hasil kepada pengguna
-        setShowResult(true);
-      }
+      return;
     }
+
+    /* selesai : hitung & simpan */
+    const correct = newAnswers.filter((a, i) => a === questions[i].answer).length;
+    const calculatedScore = Math.round((correct / questions.length) * 100);
+    setScore(calculatedScore);
+
+    try {
+      const res = await fetch('/api/quiz/attempts', {
+        method: 'POST',
+        credentials: 'include', // kirim cookie
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          score: calculatedScore,
+          total_questions: questions.length,
+        }),
+      });
+      if (!res.ok) throw new Error('Gagal menyimpan');
+    } catch (e) {
+      console.error('Gagal menyimpan hasil kuis:', e);
+    }
+
+    setShowResult(true);
   };
 
-  // ... (sisa kode JSX untuk tampilan tetap sama) ...
-  if (isLoading) {
+  /* ---------- loading ---------- */
+  if (isLoading)
     return (
       <main className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
         <p className="text-gray-700">Memverifikasi & Memuat soal...</p>
       </main>
     );
-  }
-  
-  if (!isAuthorized) {
-    return null; 
-  }
 
-  if (showResult) {
+  if (!isAuthorized) return null;
+
+  /* ---------- hasil ---------- */
+  if (showResult)
     return (
       <main className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 text-gray-900 px-4 py-16">
         <div className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
@@ -122,7 +120,7 @@ export default function QuizPage() {
           </div>
 
           <div className="text-center">
-             <button
+            <button
               onClick={() => location.reload()}
               className="mt-6 px-6 py-3 rounded-xl bg-gradient-to-r from-green-700 to-blue-600 text-white font-semibold hover:from-green-800 hover:to-blue-700 transition"
             >
@@ -132,8 +130,8 @@ export default function QuizPage() {
         </div>
       </main>
     );
-  }
 
+  /* ---------- soal ---------- */
   return (
     <>
       <div
@@ -142,20 +140,20 @@ export default function QuizPage() {
       />
       <div className="fixed inset-0 -z-10 bg-white/20 backdrop-blur-sm" />
       <main className="min-h-screen flex items-center justify-center text-gray-900 px-4">
-        {questions.length > 0 ? (
-        <div className="max-w-2xl w-full">
+        {questions.length ? (
+          <div className="max-w-2xl w-full">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow p-6">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-gray-700">
-                  Soal {index + 1}/{questions.length}
-                </span>
+                <span className="text-sm text-gray-700">Soal {index + 1}/{questions.length}</span>
               </div>
               <h2 className="text-xl font-bold mb-6">{questions[index].idioms}</h2>
               <div className="space-y-3">
                 {questions[index].options.map((opt) => (
                   <label
                     key={opt}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-green-50 transition ${selected === opt ? 'bg-green-100 border-green-500' : 'bg-white/70'}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-green-50 transition ${
+                      selected === opt ? 'bg-green-100 border-green-500' : 'bg-white/70'
+                    }`}
                   >
                     <input
                       type="radio"
@@ -177,12 +175,11 @@ export default function QuizPage() {
                 {index === questions.length - 1 ? 'Selesai' : 'Selanjutnya'}
               </button>
             </div>
-        </div>
+          </div>
         ) : (
-            <p className="text-gray-700">Tidak ada soal kuis yang tersedia saat ini.</p>
+          <p className="text-gray-700">Tidak ada soal kuis yang tersedia saat ini.</p>
         )}
       </main>
     </>
   );
 }
-
