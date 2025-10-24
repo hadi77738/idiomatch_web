@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showDownload, setShowDownload] = useState(false);   // <-- tambahan
   const { user, isLoading, logout } = useUser();
 
   const navItems = [
@@ -16,6 +17,9 @@ export default function Header() {
     { label: 'Acknowledgment', href: '/acknowledgment' },
     { label: 'Testimonies', href: '/testimony' },
   ];
+
+  /* handler klik di luar area dropdown (opsional) */
+  const closeDownload = () => setShowDownload(false);
 
   return (
     <header className="w-full bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
@@ -43,15 +47,36 @@ export default function Header() {
 
             {/* Bagian Dinamis untuk Tombol Aksi */}
             <div className="flex items-center space-x-4">
-              
-              {/* === TOMBOL DOWNLOAD BARU (DESKTOP) === */}
-              <a 
-                href="/idiomatch-app.apk" 
-                download
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Download App
-              </a>
+              {/* === DROPDOWN DOWNLOAD (DESKTOP) === */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowDownload((v) => !v)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Download App
+                </button>
+
+                {showDownload && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black/5 z-10">
+                    <a
+                      href="/Idiomatch.apk"
+                      download
+                      onClick={closeDownload}
+                      className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                    >
+                      Android (.apk)
+                    </a>
+                    <a
+                      href="/idiomatch-setup.exe"
+                      download
+                      onClick={closeDownload}
+                      className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                    >
+                      Windows (.exe)
+                    </a>
+                  </div>
+                )}
+              </div>
 
               {isLoading ? (
                 <div className="h-8 w-24 bg-gray-200 rounded-md animate-pulse"></div>
@@ -105,38 +130,69 @@ export default function Header() {
               </Link>
             ))}
             <hr className="my-2" />
-            
+
             {/* Bagian Dinamis untuk Mobile */}
             <div className="px-4 py-2 space-y-3">
+              {/* === DROPDOWN DOWNLOAD (MOBILE) === */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowDownload((v) => !v)}
+                  className="w-full text-center px-4 py-2 text-white bg-blue-600 rounded-md"
+                >
+                  Download App
+                </button>
 
-              {/* === TOMBOL DOWNLOAD BARU (MOBILE) === */}
-              <a 
-                href="/idiomatch-app.apk" 
-                download
-                onClick={() => setIsOpen(false)}
-                className="block text-center px-4 py-2 text-white bg-blue-600 rounded-md transition"
-              >
-                Download App
-              </a>
+                {showDownload && (
+                  <div className="mt-2 w-full bg-white rounded-md shadow ring-1 ring-black/5">
+                    <a
+                      href="/Idiomatch.apk"
+                      download
+                      onClick={() => { setShowDownload(false); setIsOpen(false); }}
+                      className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                    >
+                      Android (.apk)
+                    </a>
+                    <a
+                      href="/idiomatch-setup.exe"
+                      download
+                      onClick={() => { setShowDownload(false); setIsOpen(false); }}
+                      className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                    >
+                      Windows (.exe)
+                    </a>
+                  </div>
+                )}
+              </div>
 
               {isLoading ? (
                 <div className="h-8 w-full bg-gray-200 rounded-md animate-pulse"></div>
               ) : user ? (
                 <div className="space-y-3">
-                    <p className="font-medium text-gray-800">Hi, {user.full_name}</p>
-                    {user.is_admin && (
-                        <Link href="/admin" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-2 text-sm text-white bg-purple-600 rounded-md">
-                            Admin Dashboard
-                        </Link>
-                    )}
-                    <button onClick={() => {logout(); setIsOpen(false);}} className="block w-full text-left px-4 py-2 text-sm text-white bg-red-600 rounded-md">
-                        Logout
-                    </button>
+                  <p className="font-medium text-gray-800">Hi, {user.full_name}</p>
+                  {user.is_admin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsOpen(false)}
+                      className="block w-full text-center px-4 py-2 text-sm text-white bg-purple-600 rounded-md"
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => { logout(); setIsOpen(false); }}
+                    className="block w-full text-left px-4 py-2 text-sm text-white bg-red-600 rounded-md"
+                  >
+                    Logout
+                  </button>
                 </div>
               ) : (
-                  <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center px-4 py-2 text-white bg-green-700 rounded-md transition">
-                    Login
-                  </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-center px-4 py-2 text-white bg-green-700 rounded-md"
+                >
+                  Login
+                </Link>
               )}
             </div>
           </nav>
