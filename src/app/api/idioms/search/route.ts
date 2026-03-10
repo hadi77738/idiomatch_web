@@ -9,10 +9,13 @@ export async function GET(req: Request) {
 
   try {
     const result = await pool.query(
-      `SELECT id, idioms, meaning_id, meaning_en, example_sentence, sentence_translation, example_conversation
+      `SELECT idioms.id, idioms.idioms, idioms.meaning_id, idioms.meaning_en, idioms.example_sentence, idioms.sentence_translation, idioms.example_conversation, u.name as unit_name
        FROM idioms
-       WHERE LOWER(idioms) LIKE $1
-          OR LOWER(meaning_id) LIKE $1
+       LEFT JOIN units u ON idioms.unit_id = u.id
+       WHERE LOWER(idioms.idioms) LIKE $1
+          OR LOWER(idioms.meaning_id) LIKE $1
+          OR LOWER(idioms.meaning_en) LIKE $1
+          OR LOWER(u.name) LIKE $1
        LIMIT 10`,
       [`%${q}%`]
     );
