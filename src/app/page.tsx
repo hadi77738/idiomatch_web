@@ -17,7 +17,7 @@ type Idiom = {
 export default function HomePage() {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Idiom[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [showNoResults, setShowNoResults] = useState(false);
   const [randomIdioms, setRandomIdioms] = useState<Idiom[]>([]);
   const [selected, setSelected] = useState<Idiom | null>(null);
 
@@ -31,7 +31,7 @@ export default function HomePage() {
   const handleSearch = async () => {
     if (!search.trim()) {
       setResults([]);
-      setHasSearched(false);
+      setShowNoResults(false);
       return;
     }
 
@@ -44,11 +44,15 @@ export default function HomePage() {
       }
       const data = await res.json();
       setResults(data);
-      setHasSearched(true);
+      if (data.length === 0) {
+        setShowNoResults(true);
+      } else {
+        setShowNoResults(false);
+      }
     } catch (error) {
       console.error("Failed to search idioms:", error);
       setResults([]);
-      setHasSearched(true);
+      setShowNoResults(true);
     }
   };
 
@@ -115,13 +119,7 @@ export default function HomePage() {
           </section>
 
           {/* Search Results */}
-          {hasSearched && results.length === 0 ? (
-            <section className="mb-16 text-center">
-              <p className="text-lg text-gray-700 bg-red-50/80 p-4 rounded-xl border border-red-200 inline-block shadow">
-                Maaf, tidak ada idiom atau unit yang cocok dengan &quot;{search}&quot;.
-              </p>
-            </section>
-          ) : results.length > 0 ? (
+          {results.length > 0 && (
             <section className="mb-16">
               <h2 className="text-xl font-bold text-gray-800 mb-4">
                 Hasil Pencarian
@@ -152,7 +150,7 @@ export default function HomePage() {
                 ))}
               </div>
             </section>
-          ) : null}
+          )}
 
           {/* Random Idioms */}
           <section>
@@ -240,6 +238,51 @@ export default function HomePage() {
                 {selected.example_conversation.replace(/\\n/g, "\n")}
               </pre>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup No Results */}
+      {showNoResults && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl max-w-md w-full p-6 relative text-center">
+            <button
+              onClick={() => setShowNoResults(false)}
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+              aria-label="Tutup"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <div className="mb-4 text-red-500 flex justify-center mt-2">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">Tidak Ada Hasil</h2>
+            <p className="text-gray-700 mb-6">
+              Maaf, kami tidak dapat menemukan idiom atau unit yang cocok dengan kata kunci &quot;<span className="font-semibold">{search}</span>&quot;.
+            </p>
+            <button
+              onClick={() => {
+                 setShowNoResults(false);
+                 setSearch("");
+              }}
+              className="w-full px-4 py-2 bg-gradient-to-r from-green-700 to-blue-600 text-white rounded-xl hover:from-green-800 hover:to-blue-700 transition font-medium"
+            >
+              Coba Kata Kunci Lain
+            </button>
           </div>
         </div>
       )}
