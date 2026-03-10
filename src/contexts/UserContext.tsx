@@ -37,7 +37,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setUser(null);
         }
-      } catch (error) {
+      } catch {
         setUser(null);
       } finally {
         setIsLoading(false);

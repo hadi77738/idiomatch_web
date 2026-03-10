@@ -64,8 +64,6 @@ export async function POST(req: NextRequest) {
     if (userRes.rowCount === 0)
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    const { full_name, nim } = userRes.rows[0];
-
     // Insert – kolom full_name & nim tetap diisi (biar tidak break API lama)
     await pool.query(
   'INSERT INTO quiz_attempts (user_id, score, total_questions) VALUES ($1,$2,$3)',

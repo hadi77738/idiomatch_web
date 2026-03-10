@@ -13,13 +13,13 @@ async function verifyToken(request: Request) {
     const secret = new TextEncoder().encode(process.env.jwt_secret || 'your-default-super-secret-key');
     const { payload } = await jwtVerify(token, secret);
     return payload;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
 // Mengambil semua testimoni (Publik)
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Ambil data testimoni dan gabungkan dengan nama pengguna dari tabel users
     const testimoniesResult = await pool.query(`

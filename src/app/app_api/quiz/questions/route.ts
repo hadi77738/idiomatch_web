@@ -13,7 +13,7 @@ async function verifyToken(request: Request) {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-default-super-secret-key');
     const { payload } = await jwtVerify(token, secret);
     return payload;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

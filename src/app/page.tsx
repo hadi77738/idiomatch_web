@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 type Idiom = {
   id: number;
@@ -70,10 +71,13 @@ export default function HomePage() {
             </h1>
 
             {/* Logo */}
-            <img
+            <Image
               src="/logo.png"
               alt="Idiomatch Logo"
+              width={160}
+              height={160}
               className="mx-auto h-40 w-auto mb-4 object-contain"
+              priority
             />
 
             <p className="text-lg text-gray-800 max-w-2xl mx-auto">
@@ -114,7 +118,7 @@ export default function HomePage() {
           {hasSearched && results.length === 0 ? (
             <section className="mb-16 text-center">
               <p className="text-lg text-gray-700 bg-red-50/80 p-4 rounded-xl border border-red-200 inline-block shadow">
-                Maaf, tidak ada idiom atau unit yang cocok dengan "{search}".
+                Maaf, tidak ada idiom atau unit yang cocok dengan &quot;{search}&quot;.
               </p>
             </section>
           ) : results.length > 0 ? (
