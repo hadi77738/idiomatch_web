@@ -20,12 +20,26 @@ export default function HomePage() {
   const [showNoResults, setShowNoResults] = useState(false);
   const [randomIdioms, setRandomIdioms] = useState<Idiom[]>([]);
   const [selected, setSelected] = useState<Idiom | null>(null);
+  const [randomLoadFailed, setRandomLoadFailed] = useState(false);
 
   useEffect(() => {
     fetch("/api/idioms/random")
-      .then((res) => res.json())
-      .then((data) => setRandomIdioms(data))
-      .catch((err) => console.error("Gagal memuat idiom populer:", err));
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok || !Array.isArray(data)) {
+          throw new Error(`Failed to load random idioms: ${res.status}`);
+        }
+        return data;
+      })
+      .then((data) => {
+        setRandomIdioms(data);
+        setRandomLoadFailed(false);
+      })
+      .catch((err) => {
+        console.error("Gagal memuat idiom populer:", err);
+        setRandomIdioms([]);
+        setRandomLoadFailed(true);
+      });
   }, []);
 
   const handleSearch = async () => {
@@ -157,25 +171,31 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
               Popular Idioms Today
             </h2>
-            <div className="grid gap-6 md:grid-cols-3">
-              {randomIdioms.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelected(item)}
-                  className="p-5 rounded-2xl bg-white/70 backdrop-blur-sm shadow hover:shadow-lg cursor-pointer transition"
-                >
-                  <h3 className="font-semibold text-green-800 mb-2">
-                    {item.idioms}
-                  </h3>
-                  <p className="text-sm text-gray-700 mb-3">
-                    {item.meaning_id}
-                  </p>
-                  <span className="text-sm font-medium text-blue-600">
-                    See detail →
-                  </span>
-                </div>
-              ))}
-            </div>
+            {randomLoadFailed ? (
+              <div className="rounded-2xl bg-white/70 backdrop-blur-sm shadow p-5 text-center text-gray-700">
+                Popular idioms are temporarily unavailable.
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-3">
+                {randomIdioms.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelected(item)}
+                    className="p-5 rounded-2xl bg-white/70 backdrop-blur-sm shadow hover:shadow-lg cursor-pointer transition"
+                  >
+                    <h3 className="font-semibold text-green-800 mb-2">
+                      {item.idioms}
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      {item.meaning_id}
+                    </p>
+                    <span className="text-sm font-medium text-blue-600">
+                      See detail →
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>
