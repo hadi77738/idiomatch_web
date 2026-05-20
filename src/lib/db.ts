@@ -1,14 +1,22 @@
-import { Pool } from 'pg';
+import { Pool, type PoolConfig } from 'pg';
 
-const pool = new Pool({
-  host: 'aws-1-ap-southeast-1.pooler.supabase.com',
-  port: 6543,
-  database: 'postgres',
-  user: 'postgres.ljveqfmifeqquebjvwau',
-  password: 'sugihmanik1',
-  ssl: {
+const connectionString = process.env.DATABASE_URL?.trim();
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not set.');
+}
+
+const poolConfig: PoolConfig = {
+  connectionString,
+};
+
+// Neon/Supabase managed Postgres typically require SSL.
+if (!/localhost|127\.0\.0\.1/i.test(connectionString)) {
+  poolConfig.ssl = {
     rejectUnauthorized: false,
-  },
-});
+  };
+}
+
+const pool = new Pool(poolConfig);
 
 export default pool;
